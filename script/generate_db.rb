@@ -7,10 +7,10 @@ require 'active_record'
 
 #dir = "/media/attach/crunchbase/data"
 dir = '/tmp'
+db_config = {:adapter => "sqlite3", :database => "#{dir}/crunchbase.sqlite3"}
 
 ActiveRecord::Base.logger = Logger.new(STDOUT)
-ActiveRecord::Base.establish_connection(:adapter => "sqlite3",
-                                        :database => "#{dir}/crunchbase.sqlite3")
+ActiveRecord::Base.establish_connection db_config
 ActiveRecord::Schema.define do
   create_table   :companies, :force => true do |t|
     t.string     :permalink, :twitter, :blog, :blog_feed, :category,
@@ -80,26 +80,22 @@ class Office < ActiveRecord::Base; belongs_to :company; end
 class Transaction < ActiveRecord::Base; belongs_to :company; end
 class Relationship < ActiveRecord::Base; end
 
+# auxiliary functions
 def to_date(year, month, day)
   [year, ('0' + month.to_s)[-2..-1], ('0' + day.to_s)[-2..-1]].join('-')
 end
-
 def normalize(string)
   (string || '').gsub(/\\u([\da-fA-F]{4})/){|m|[$1].pack("H*").unpack("n*").pack("U*")}.dump[1..-2]
 end
-
 def parse_stock(string)
   (': ' + ((string || {})['stock_symbol'] || '')).split(':').last(2).map{|x|x.strip}
 end
-
 def create_offices(array)
   (array || []).map{|x| Office.new{|o| o.country_code = x['country_code']; o.latitude = x['latitude']; o.longitude = x['longitude']}}
 end
-
 def create_relationships(array, key)
   (array || []).map{|x| Relationship.new{|t| t.permalink = x[key]['permalink']; t.title = x['title']; t.past = x['is_past']}}
 end
-
 def create_transactions(array, date_prefix, quantity_prefix)
   d, q = date_prefix, quantity_prefix
   (array || []).map do |x|
@@ -110,11 +106,14 @@ def create_transactions(array, date_prefix, quantity_prefix)
     end
   end
 end
+#end of auxiliary functions
 
 fy, fm, fd = 'founded_year', 'founded_month', 'founded_day'
 dy, dm, dd = 'deadpooled_year', 'deadpooled_month', 'deadpooled_day'
+array = YAML.load_file("#{dir}/companies.js").map{|c|c['permalink']}
 Company.find_or_create_by_permalink nil # creates the empty company
-YAML.load_file("#{dir}/companies.js").map{|c|c['permalink']}.each do |permalink|
+array.each_index do |i| permalink = array[i]
+  $stderr.printf "\r%5d/%d", i, array.size
   data = YAML.load_file "#{dir}/companies/#{permalink}.js"
   company = Company.find_or_create_by_permalink(permalink) do |c|
     c.permalink    = data['permalink']
@@ -141,7 +140,7 @@ YAML.load_file("#{dir}/companies.js").map{|c|c['permalink']}.each do |permalink|
   company.competitors = (data['competitions'] || []).map do |x|
     Company.find_or_create_by_permalink(x['competitor']['permalink'])
   end
-  investments = data['investments'].map{|x|x['funding_round']}
+  investments = (data['investments'] || []).map{|x|x['funding_round']}
   company.investments = create_transactions(investments, 'funded', 'raised')
   company.acquisitions = create_transactions(data['acquisitions'], 'acquired', 'price')
   company.funding_rounds = create_transactions(data['funding_rounds'], 'funded', 'raised')
