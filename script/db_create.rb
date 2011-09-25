@@ -9,7 +9,7 @@ ActiveRecord::Schema.define do
                  :crunchbase, :homepage, :email, :stock_market, :stock_symbol
     t.text       :description, :overview, :aliases, :tags, :products
     t.integer    :employees, :money_raised
-    t.date       :funded, :deadpooled
+    t.date       :founded, :deadpooled
     t.timestamps
   end
   create_table   :competitions, :force => true, :id => false do |t|
