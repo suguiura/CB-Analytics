@@ -1,84 +1,8 @@
 #!/usr/bin/env ruby
 
-require 'yaml'
-require 'logger'
-require 'rubygems'
-require 'active_record'
-
-#dir = "/media/attach/crunchbase/data"
-dir = '/tmp'
-db_config = {:adapter => "sqlite3", :database => "#{dir}/crunchbase.sqlite3"}
-
-ActiveRecord::Base.logger = Logger.new(STDOUT)
-ActiveRecord::Base.establish_connection db_config
-ActiveRecord::Schema.define do
-  create_table   :companies, :force => true do |t|
-    t.string     :permalink, :twitter, :blog, :blog_feed, :category,
-                 :crunchbase, :homepage, :email, :stock_market, :stock_symbol
-    t.text       :description, :overview, :aliases, :tags, :products
-    t.integer    :employees, :money_raised
-    t.date       :funded, :deadpooled
-    t.timestamps
-  end
-  create_table   :competitions, :force => true, :id => false do |t|
-    t.references :company, :competitor
-  end
-  create_table   :offices, :force => true do |t|
-    t.references :company
-    t.string     :country_code
-    t.decimal    :latitude, :longitude, :precision => 9, :scale => 6
-  end
-  create_table   :transactions, :force => true do |t|
-    t.references :company
-    t.date       :date
-    t.string     :value, :currency
-  end
-  create_table   :investments, :force => true, :id => false do |t|
-    t.references :company, :transaction
-  end
-  create_table   :acquisitions, :force => true, :id => false do |t|
-    t.references :company, :transaction
-  end
-  create_table   :funding_rounds, :force => true, :id => false do |t|
-    t.references :company, :transaction
-  end
-  create_table   :relationships, :force => true do |t|
-    t.string     :permalink, :title
-    t.boolean    :past
-  end
-  create_table   :providerships, :force => true, :id => false do |t|
-    t.references :company, :relationship
-  end
-  create_table   :peopleships, :force => true, :id => false do |t|
-    t.references :company, :relationship
-  end
-end
-
-class Company < ActiveRecord::Base
-  has_and_belongs_to_many :competitors,
-                          :class_name => 'Company',
-                          :join_table => 'competitions',
-                          :association_foreign_key => 'competitor_id'
-  has_and_belongs_to_many :acquisitions,
-                          :class_name => 'Transaction',
-                          :join_table => 'acquisitions'
-  has_and_belongs_to_many :investments,
-                          :class_name => 'Transaction',
-                          :join_table => 'investments'
-  has_and_belongs_to_many :funding_rounds,
-                          :class_name => 'Transaction',
-                          :join_table => 'funding_rounds'
-  has_and_belongs_to_many :providerships,
-                          :class_name => 'Relationship',
-                          :join_table => 'providerships'
-  has_and_belongs_to_many :peopleships,
-                          :class_name => 'Relationship',
-                          :join_table => 'peopleships'
-  has_many :offices
-end
-class Office < ActiveRecord::Base; belongs_to :company; end
-class Transaction < ActiveRecord::Base; belongs_to :company; end
-class Relationship < ActiveRecord::Base; end
+$: << File.join(File.dirname(__FILE__), '.')
+require 'connection'
+require 'models'
 
 # auxiliary functions
 def to_date(year, month, day)
@@ -108,9 +32,11 @@ def create_transactions(array, date_prefix, quantity_prefix)
 end
 #end of auxiliary functions
 
+dir = '/tmp'
 fy, fm, fd = 'founded_year', 'founded_month', 'founded_day'
 dy, dm, dd = 'deadpooled_year', 'deadpooled_month', 'deadpooled_day'
 array = YAML.load_file("#{dir}/companies.js").map{|c|c['permalink']}
+array = ['facebook']
 Company.find_or_create_by_permalink nil # creates the empty company
 array.each_index do |i| permalink = array[i]
   $stderr.printf "\r%5d/%d", i, array.size
