@@ -8,7 +8,6 @@ dir = '/tmp'
 fy, fm, fd = 'founded_year', 'founded_month', 'founded_day'
 dy, dm, dd = 'deadpooled_year', 'deadpooled_month', 'deadpooled_day'
 
-# auxiliary functions
 def to_date(year, month, day)
   [year, ('0' + month.to_s)[-2..-1], ('0' + day.to_s)[-2..-1]].join('-')
 end
@@ -34,8 +33,7 @@ def create_transactions(array, date_prefix, quantity_prefix)
 end
 
 Company.find_or_create_by_permalink nil # creates the empty company
-#array = YAML.load_file("#{dir}/companies.js").map{|c|c['permalink']}
-array = ['google']
+array = YAML.load_file("#{dir}/companies.js").map{|c|c['permalink']}
 array.each_index do |i|
   $stderr.printf "\r%5d/%d", i, array.size
   data = YAML.load_file "#{dir}/companies/#{array[i]}.js"
