@@ -5,10 +5,13 @@ require 'connection'
 
 ActiveRecord::Schema.define do
   create_table   :companies, :force => true do |t|
-    t.string     :permalink, :twitter, :blog, :blog_feed, :category,
-                 :crunchbase, :homepage, :email, :stock_market, :stock_symbol
-    t.text       :description, :overview, :aliases, :tags, :products
-    t.integer    :employees, :money_raised
+    t.string     :permalink, :blog_feed, :homepage, :crunchbase, :description,
+                 :limit => 256, :default => ''
+    t.string     :twitter, :stock_symbol, :stock_market, :money_raised,
+                 :category, :email, :limit => 64
+    t.string     :blog, :limit => 512
+    t.text       :overview, :aliases, :tags, :products, :default => ''
+    t.integer    :employees, :default => 0
     t.date       :founded, :deadpooled
     t.timestamps
   end
@@ -21,7 +24,7 @@ ActiveRecord::Schema.define do
     t.decimal    :latitude, :longitude, :precision => 9, :scale => 6
   end
   create_table   :transactions, :force => true do |t|
-    t.references :company
+    t.references :other_company
     t.date       :date
     t.string     :value, :currency
   end

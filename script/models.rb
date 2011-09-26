@@ -27,7 +27,7 @@ class Office < ActiveRecord::Base
 end
 
 class Transaction < ActiveRecord::Base
-  belongs_to :company
+  belongs_to :other_company, :class_name => 'Company'
 end
 
 class Relationship < ActiveRecord::Base
