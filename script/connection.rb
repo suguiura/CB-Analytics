@@ -3,7 +3,7 @@ require 'logger'
 require 'rubygems'
 require 'active_record'
 
-config = YAML::load_file 'config/db.yaml'
+config = YAML::load_file 'config.yaml'
 current = config['current']
 
 #ActiveRecord::Base.logger = Logger.new(STDOUT)
