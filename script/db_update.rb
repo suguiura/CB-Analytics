@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 
 $: << File.join(File.dirname(__FILE__), '.')
+require 'config'
 require 'connection'
 require 'models'
 
-dir = '/tmp'
+dir = $config['data']['dir']
 fy, fm, fd = 'founded_year', 'founded_month', 'founded_day'
 dy, dm, dd = 'deadpooled_year', 'deadpooled_month', 'deadpooled_day'
 
