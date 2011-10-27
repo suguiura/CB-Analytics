@@ -1,11 +1,12 @@
-current: sqlite3
-sqlite3:
-  adapter: sqlite3
-  database: /tmp/cb.sqlite3
-postgresql:
-  adapter: postgresql
-  database: crunchbase
-  username: rafael
-  password: 
-  host: localhost
+db:
+  current: sqlite3
+  sqlite3:
+    adapter: sqlite3
+    database: /tmp/cb.sqlite3
+  postgresql:
+    adapter: postgresql
+    database: crunchbase
+    username: rafael
+    password: 
+    host: localhost
 
